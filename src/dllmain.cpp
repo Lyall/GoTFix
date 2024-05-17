@@ -127,14 +127,26 @@ void ReadConfig()
 void AspectFOVFix()
 {
     // Letterboxing in cutscenes
-    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "48 ?? ?? ?? FF ?? ?? ?? ?? ?? 83 ?? ?? ?? ?? ?? 01 75 ?? 48 ?? ?? ?? ?? 48 ?? ?? ?? ?? ?? ?? 48 ?? ?? 74 ??") + 0xA;
+    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??");
     if (LetterboxingScanResult)
     {
         spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
         if (bDisableLetterboxing)
         {
-            Memory::PatchBytes((uintptr_t)LetterboxingScanResult + 0x6, "\x00", 1);
-            spdlog::info("Letterboxing: Patched instruction.");
+            static SafetyHookMid  LetterboxingMidHook{};
+            LetterboxingMidHook = safetyhook::create_mid(LetterboxingScanResult,
+                [](SafetyHookContext& ctx)
+                {
+                    if (ctx.rdi + 0x75B)
+                    {
+                        BYTE* iLetterbox = (uint8_t*)(ctx.rdi + 0x75B);
+
+                        if (*iLetterbox == (BYTE)1)
+                        {
+                            *iLetterbox = (BYTE)0;
+                        }
+                    }
+                });
         }
     }
     else if (!LetterboxingScanResult)
@@ -184,9 +196,19 @@ void AspectFOVFix()
             {
                 if (bCompensateFOV)
                 {
-                    float fovDegs = ctx.xmm6.f32[0] * (180.00f / fPi);
-                    float newFovRads = (atanf(tanf(fovDegs * (fPi / 360)) / fLetterboxAspectRatio * fAspectRatio) * (360 / fPi)) * (fPi / 180.00f);
-                    ctx.xmm6.f32[0] = (float)newFovRads;
+                    static bool fovOn = true;
+                    if (GetAsyncKeyState(VK_F1) & 1)
+                    {
+                        fovOn = !fovOn;
+                    }
+
+                    if (fovOn)
+                    {
+                        float fovDegs = ctx.xmm6.f32[0] * (180.00f / fPi);
+                        float newFovRads = (atanf(tanf(fovDegs * (fPi / 360)) / fLetterboxAspectRatio * fAspectRatio) * (360 / fPi)) * (fPi / 180.00f);
+                        ctx.xmm6.f32[0] = (float)newFovRads;
+                    }
+
                 }
             });
     }
