@@ -1,12 +1,12 @@
 # Ghost of Tsushima Fix
-[](https://www.patreon.com/Wintermance) [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W01UAI9)<br />
+[![Patreon-Button](https://github.com/Lyall/GoTFix/assets/695941/57085682-1790-4ffe-be46-b9e3c4d5e034)](https://www.patreon.com/Wintermance) [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W01UAI9)<br />
 [![Github All Releases](https://img.shields.io/github/downloads/Lyall/GoTFix/total.svg)](https://github.com/Lyall/GoTFix/releases)
 
 This is a fix for Ghost of Tsushima that can disable letterboxing in cutscenes, adjust FOV to compensate and more.<br />
 
 ## Features
 - Disable cutscene letterboxing.
-- Adjust FOV to compensate for lack of letterboxing.
+- Adjust cutscene FOV to compensate for lack of letterboxing.
 - Remove 5.333~ aspect ratio limit.
 
 ## Installation
@@ -26,7 +26,7 @@ This list will contain bugs which may or may not be fixed.
 
 ## Screenshots
 
-|  |
+| ![ezgif-2-20eaea88bf](https://github.com/Lyall/GoTFix/assets/695941/99dc3ad0-7168-43b3-8cb5-08d5c435e955) |
 |:--:|
 | Disabled Letterboxing with Compensated FOV |
 
