@@ -197,19 +197,9 @@ void AspectFOVFix()
             {
                 if (bCompensateFOV)
                 {
-                    static bool fovOn = true;
-                    if (GetAsyncKeyState(VK_F1) & 1)
-                    {
-                        fovOn = !fovOn;
-                    }
-
-                    if (fovOn)
-                    {
-                        float fovDegs = ctx.xmm6.f32[0] * (180.00f / fPi);
-                        float newFovRads = (atanf(tanf(fovDegs * (fPi / 360)) / fLetterboxAspectRatio * fAspectRatio) * (360 / fPi)) * (fPi / 180.00f);
-                        ctx.xmm6.f32[0] = (float)newFovRads;
-                    }
-
+                    float fovDegs = ctx.xmm6.f32[0] * (180.00f / fPi);
+                    float newFovRads = (atanf(tanf(fovDegs * (fPi / 360)) / fLetterboxAspectRatio * fAspectRatio) * (360 / fPi)) * (fPi / 180.00f);
+                    ctx.xmm6.f32[0] = (float)newFovRads;
                 }
             });
     }
