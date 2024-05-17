@@ -127,7 +127,7 @@ void ReadConfig()
 void AspectFOVFix()
 {
     // Letterboxing in cutscenes
-    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??");
+    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??") + 0x9;
     if (LetterboxingScanResult)
     {
         spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
@@ -144,6 +144,7 @@ void AspectFOVFix()
                         if (*iLetterbox == (BYTE)1)
                         {
                             *iLetterbox = (BYTE)0;
+                            spdlog::info("Letterboxing: Disabled letterboxing.");
                         }
                     }
                 });
