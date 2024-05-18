@@ -12,7 +12,7 @@ HMODULE thisModule;
 inipp::Ini<char> ini;
 std::shared_ptr<spdlog::logger> logger;
 string sFixName = "GoTFix";
-string sFixVer = "1.0.0";
+string sFixVer = "0.9.0";
 string sLogFile = "GoTFix.log";
 string sConfigFile = "GoTFix.ini";
 string sExeName;
@@ -127,27 +127,14 @@ void ReadConfig()
 void AspectFOVFix()
 {
     // Letterboxing in cutscenes
-    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??") + 0x9;
+    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "FF ?? ?? ?? ?? ?? 83 ?? ?? ?? ?? ?? 01 75 ?? 48 89 ?? ?? ??") + 0x6;
     if (LetterboxingScanResult)
     {
         spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
         if (bDisableLetterboxing)
         {
-            static SafetyHookMid  LetterboxingMidHook{};
-            LetterboxingMidHook = safetyhook::create_mid(LetterboxingScanResult,
-                [](SafetyHookContext& ctx)
-                {
-                    if (ctx.rdi + 0x75B)
-                    {
-                        BYTE* iLetterbox = (uint8_t*)(ctx.rdi + 0x75B);
-
-                        if (*iLetterbox == (BYTE)1)
-                        {
-                            *iLetterbox = (BYTE)0;
-                            spdlog::info("Letterboxing: Disabled letterboxing.");
-                        }
-                    }
-                });
+            Memory::PatchBytes((uintptr_t)LetterboxingScanResult + 0x6, "\x00", 1);
+            spdlog::info("Letterboxing: Patched instruction.");
         }
     }
     else if (!LetterboxingScanResult)
@@ -185,7 +172,7 @@ void AspectFOVFix()
         spdlog::error("Current Resolution: Pattern scan failed.");
     }
 
-    // Cutscene FOV
+    // Compensate cutscene FOV
     uint8_t* CutsceneFOVScanResult = Memory::PatternScan(baseModule, "0F 28 ?? E8 ?? ?? ?? ?? F6 ?? ?? ?? ?? ?? 01");
     if (CutsceneFOVScanResult)
     {
@@ -208,7 +195,7 @@ void AspectFOVFix()
         spdlog::error("Cutscene FOV: Pattern scan failed.");
     }
 
-    // Aspect Ratio
+    // Remove aspect ratio limit
     uint8_t* AspectRatioLimitScanResult = Memory::PatternScan(baseModule, "89 ?? ?? 84 ?? 74 ?? 84 ?? 74 ?? 48 ?? ?? ?? 48 ?? ?? ?? E8 ?? ?? ?? ??");
     if (AspectRatioLimitScanResult)
     {
