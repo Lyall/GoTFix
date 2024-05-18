@@ -127,14 +127,26 @@ void ReadConfig()
 void AspectFOVFix()
 {
     // Letterboxing in cutscenes
-    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "FF ?? ?? ?? ?? ?? 83 ?? ?? ?? ?? ?? 01 75 ?? 48 89 ?? ?? ??") + 0x6;
+    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??") + 0x9;
     if (LetterboxingScanResult)
     {
         spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
         if (bDisableLetterboxing)
         {
-            Memory::PatchBytes((uintptr_t)LetterboxingScanResult + 0x6, "\x00", 1);
-            spdlog::info("Letterboxing: Patched instruction.");
+            static SafetyHookMid  LetterboxingMidHook{};
+            LetterboxingMidHook = safetyhook::create_mid(LetterboxingScanResult,
+                [](SafetyHookContext& ctx)
+                {
+                    if (ctx.rdi + 0x75A)
+                    {
+                        if (*reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) == 1 || *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) == 1)
+                        {
+                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) = 0; // Controller
+                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) = 0; // Keyboard
+                            spdlog::info("Letterboxing: Disabled letterboxing.");
+                        }
+                    }
+                });
         }
     }
     else if (!LetterboxingScanResult)
