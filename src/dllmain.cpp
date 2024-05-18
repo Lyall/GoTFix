@@ -43,6 +43,7 @@ float fAspectRatioLimit = FLT_MAX;
 float fLetterboxAspectRatio;
 int iResX = 1920;
 int iResY = 1080;
+int iResLogCount = 0;
 
 void Logging()
 {
@@ -171,12 +172,17 @@ void AspectFOVFix()
                 fAspectMultiplier = fAspectRatio / fNativeAspect;
                 fLetterboxAspectRatio = (float)iResX / ((409.00f * 0.001851851819f) * iResY); // Original cutscene aspect = 2.35:1 cinemascope a.k.a 1920x818 or 960x409 
 
-                // Log aspect ratio stuff
-                spdlog::info("----------");
-                spdlog::info("Current Resolution: Resolution: {}x{}", iResX, iResY);
-                spdlog::info("Current Resolution: fAspectRatio: {}", fAspectRatio);
-                spdlog::info("Current Resolution: fAspectMultiplier: {}", fAspectMultiplier);
-                spdlog::info("Current Resolution: fLetterboxAspectRatio: {}", fLetterboxAspectRatio);
+                // Limit log spam.
+                if (iResLogCount < 10)
+                {
+                    // Log aspect ratio stuff
+                    spdlog::info("----------");
+                    spdlog::info("Current Resolution: Resolution: {}x{}", iResX, iResY);
+                    spdlog::info("Current Resolution: fAspectRatio: {}", fAspectRatio);
+                    spdlog::info("Current Resolution: fAspectMultiplier: {}", fAspectMultiplier);
+                    spdlog::info("Current Resolution: fLetterboxAspectRatio: {}", fLetterboxAspectRatio);
+                    iResLogCount++;
+                }
             });
     }
     else if (!CurrentResolutionScanResult)
