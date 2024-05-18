@@ -5,9 +5,9 @@
 This is a fix for Ghost of Tsushima that can disable letterboxing in cutscenes, adjust FOV to compensate and more.<br />
 
 ## Features
-- Disable cutscene letterboxing.
+- Disable letterboxing in cutscenes/dialogue etc.
 - Adjust cutscene FOV to compensate for lack of letterboxing.
-- Remove 5.333~ aspect ratio limit.
+- Removes 5.333~ aspect ratio limit.
 
 ## Installation
 - Grab the latest release of GoTFix from [here.](https://github.com/Lyall/GoTFix/releases)
