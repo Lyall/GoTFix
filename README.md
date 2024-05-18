@@ -33,6 +33,7 @@ This list will contain bugs which may or may not be fixed.
 | Disabled Letterboxing with Compensated FOV |
 
 ## Credits
+Thanks to **Ersh** et al on the WSGF Discord for testing!<br />
 [Ultimate ASI Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader) for ASI loading. <br />
 [inipp](https://github.com/mcmtroffaes/inipp) for ini reading. <br />
 [spdlog](https://github.com/gabime/spdlog) for logging. <br />
