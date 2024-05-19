@@ -12,7 +12,7 @@ HMODULE thisModule;
 inipp::Ini<char> ini;
 std::shared_ptr<spdlog::logger> logger;
 string sFixName = "GoTFix";
-string sFixVer = "0.9.1";
+string sFixVer = "0.9.2";
 string sLogFile = "GoTFix.log";
 string sConfigFile = "GoTFix.ini";
 string sExeName;
