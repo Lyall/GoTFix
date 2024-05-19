@@ -24,8 +24,6 @@ This is a fix for Ghost of Tsushima that can disable letterboxing in cutscenes, 
 Please report any issues you see.
 This list will contain bugs which may or may not be fixed.
 
-- Letterboxing is not removed during standoffs.
-
 ## Screenshots
 
 | ![ezgif-2-20eaea88bf](https://github.com/Lyall/GoTFix/assets/695941/99dc3ad0-7168-43b3-8cb5-08d5c435e955) |
