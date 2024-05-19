@@ -288,7 +288,6 @@ void Movies()
             "v_gp_yarikawa_defend_your_friend_ps5",
             "v_gp_yuna_backstab_cutaway_children_ps5",
             "v_gp_yuna_fear_no_escape_ps5",
-            "v_lm_storyteller_intro_ps5",
             "v_tr_focus_khans_prisoner_ps5",
         };
 
