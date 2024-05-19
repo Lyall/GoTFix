@@ -7,7 +7,8 @@ This is a fix for Ghost of Tsushima that can disable letterboxing in cutscenes, 
 ## Features
 - Disable letterboxing in cutscenes/dialogue etc.
 - Adjust cutscene FOV to compensate for lack of letterboxing.
-- Crop letterboxing from cutscene videos at >16:9s.
+- Crop letterboxing from cutscene videos at >16:9.
+- Skip intro video.
 - Removes 5.333~ aspect ratio limit.
 
 ## Installation
