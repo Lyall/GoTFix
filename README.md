@@ -29,7 +29,11 @@ This list will contain bugs which may or may not be fixed.
 
 | ![ezgif-2-20eaea88bf](https://github.com/Lyall/GoTFix/assets/695941/99dc3ad0-7168-43b3-8cb5-08d5c435e955) |
 |:--:|
-| Disabled Letterboxing with Compensated FOV |
+| Disabled Letterboxing With Compensated FOV |
+
+| ![ezgif-7-024f28e2eb](https://github.com/Lyall/GoTFix/assets/695941/6dcc330a-155d-422f-8c1f-6a2190445fc7) |
+|:--:|
+| Letterboxing Cropped in Cutscene Video |
 
 ## Credits
 Thanks to Ersh and others on the WSGF Discord for testing!<br />
