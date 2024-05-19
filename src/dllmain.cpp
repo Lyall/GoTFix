@@ -114,12 +114,14 @@ void ReadConfig()
     }
 
     // Read ini file
+    inipp::get_value(ini.sections["Skip Intro"], "Enabled", bSkipIntro);
     inipp::get_value(ini.sections["Disable Letterboxing"], "Enabled", bDisableLetterboxing);
     inipp::get_value(ini.sections["Disable Letterboxing"], "CompensateFOV", bCompensateFOV);
     inipp::get_value(ini.sections["Crop Video Letterboxing"], "Enabled", bMovieZoom);
     inipp::get_value(ini.sections["Remove Aspect Ratio Limit"], "Enabled", bRemoveAspectLimit);
 
     // Log config parse
+    spdlog::info("Config Parse: bSkipIntro: {}", bSkipIntro);
     spdlog::info("Config Parse: bDisableLetterboxing: {}", bDisableLetterboxing);
     spdlog::info("Config Parse: bCompensateFOV: {}", bCompensateFOV);
     spdlog::info("Config Parse: bMovieZoom: {}", bMovieZoom);
@@ -245,6 +247,22 @@ void AspectFOV()
 
 void Movies()
 {   
+    if (bSkipIntro)
+    {
+        // Skip splash intro video
+        uint8_t* SkipIntroScanResult = Memory::PatternScan(baseModule, "83 ?? 02 74 ?? 48 ?? ?? ?? 48 ?? ?? ?? ?? ?? ?? E8 ?? ?? ?? ??");
+        if (SkipIntroScanResult)
+        {
+            spdlog::info("Skip Intro: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)SkipIntroScanResult - (uintptr_t)baseModule);
+            Memory::PatchBytes((uintptr_t)SkipIntroScanResult + 0x3, "\xEB", 1);
+            spdlog::info("Skip Intro: Patched instruction.");
+        }
+        else if (!SkipIntroScanResult)
+        {
+            spdlog::error("Skip Intro: Pattern scan failed.");
+        }
+    }
+
     if (bMovieZoom)
     {
         // Letterboxed cutscene names
