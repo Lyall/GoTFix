@@ -41,9 +41,11 @@ float fHUDHeightOffset;
 // Variables
 float fAspectRatioLimit = FLT_MAX;
 float fLetterboxAspectRatio;
+float fDefaultLetterboxAspectRatio = (float)1920 / 818;
 int iResX = 1920;
 int iResY = 1080;
 int iResLogCount = 0;
+string sVideoName = "splash_pc";
 
 void Logging()
 {
@@ -125,36 +127,8 @@ void ReadConfig()
     DesktopDimensions = Util::GetPhysicalDesktopDimensions();
 }
 
-void AspectFOVFix()
+void GrabResolution()
 {
-    // Letterboxing in cutscenes
-    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??") + 0x9;
-    if (LetterboxingScanResult)
-    {
-        spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
-        if (bDisableLetterboxing)
-        {
-            static SafetyHookMid  LetterboxingMidHook{};
-            LetterboxingMidHook = safetyhook::create_mid(LetterboxingScanResult,
-                [](SafetyHookContext& ctx)
-                {
-                    if (ctx.rdi + 0x75A)
-                    {
-                        if (*reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) == 1 || *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) == 1)
-                        {
-                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) = 0; // Controller
-                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) = 0; // Keyboard
-                            spdlog::info("Letterboxing: Disabled letterboxing.");
-                        }
-                    }
-                });
-        }
-    }
-    else if (!LetterboxingScanResult)
-    {
-        spdlog::error("Letterboxing: Pattern scan failed.");
-    }
-
     // Get current resolution and aspect ratio
     uint8_t* CurrentResolutionScanResult = Memory::PatternScan(baseModule, "89 ?? ?? ?? ?? ?? C1 ?? 03 89 ?? ?? ?? ?? ?? 41 ?? ?? C1 ?? 03");
     if (CurrentResolutionScanResult)
@@ -188,6 +162,37 @@ void AspectFOVFix()
     else if (!CurrentResolutionScanResult)
     {
         spdlog::error("Current Resolution: Pattern scan failed.");
+    }
+}
+
+void AspectFOV()
+{
+    // Letterboxing in cutscenes
+    uint8_t* LetterboxingScanResult = Memory::PatternScan(baseModule, "83 ?? ?? ?? ?? ?? 00 7C ?? 48 ?? ?? 48 ?? ?? FF 90 ?? ?? ?? ?? 84 ??") + 0x9;
+    if (LetterboxingScanResult)
+    {
+        spdlog::info("Letterboxing: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)LetterboxingScanResult - (uintptr_t)baseModule);
+        if (bDisableLetterboxing)
+        {
+            static SafetyHookMid  LetterboxingMidHook{};
+            LetterboxingMidHook = safetyhook::create_mid(LetterboxingScanResult,
+                [](SafetyHookContext& ctx)
+                {
+                    if (ctx.rdi + 0x75A)
+                    {
+                        if (*reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) == 1 || *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) == 1)
+                        {
+                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75A) = 0; // Controller
+                            *reinterpret_cast<BYTE*>(ctx.rdi + 0x75B) = 0; // Keyboard
+                            spdlog::info("Letterboxing: Disabled letterboxing.");
+                        }
+                    }
+                });
+        }
+    }
+    else if (!LetterboxingScanResult)
+    {
+        spdlog::error("Letterboxing: Pattern scan failed.");
     }
 
     // Compensate cutscene FOV
@@ -235,11 +240,92 @@ void AspectFOVFix()
     }
 }
 
+void Movies()
+{   
+    // Letterboxed cutscene names
+    static vector<string> sLetterboxedCutscenes =
+    {
+        "v_gp_clear_komatsu_hope_ps5",
+        "v_gp_exile_horse_death_black",
+        "v_gp_exile_horse_death_dapple",
+        "v_gp_exile_horse_death_deluxe",
+        "v_gp_exile_horse_death_ngp",
+        "v_gp_exile_horse_death_white",
+        "v_gp_ghosts_mask_b10",
+        "v_gp_ghosts_mask_b10_micro_fb",
+        "v_gp_horizon_khan_takes_castle_ps5",
+        "v_gp_iki_cove_defend_kazumasa_flashback",
+        "v_gp_occupation_sword_recovery_a10",
+        "v_gp_occupation_sword_recovery_b10",
+        "v_gp_storm_before_release_black",
+        "v_gp_storm_before_release_dapple",
+        "v_gp_storm_before_release_deluxe",
+        "v_gp_storm_before_release_ngp",
+        "v_gp_storm_before_release_white",
+        "v_gp_yarikawa_defend_your_friend_ps5",
+        "v_gp_yuna_backstab_cutaway_children_ps5",
+        "v_gp_yuna_fear_no_escape_ps5",
+        "v_lm_storyteller_intro_ps5",
+        "v_tr_focus_khans_prisoner_ps5",
+    };
+
+    // Get movie name
+    uint8_t* MovieNameScanResult = Memory::PatternScan(baseModule, "F7 ?? ?? ?? ?? ?? 48 ?? ?? ?? 48 ?? ?? ?? 01 00 00 00");
+    if (MovieNameScanResult)
+    {
+        spdlog::info("Movie Name: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)MovieNameScanResult - (uintptr_t)baseModule);
+
+        static SafetyHookMid MovieNameMidHook{};
+        MovieNameMidHook = safetyhook::create_mid(MovieNameScanResult,
+            [](SafetyHookContext& ctx)
+            {
+                if (ctx.rsi + 0x48)
+                {
+                    uintptr_t VideoTrackAddr = *(uintptr_t*)(ctx.rsi + 0x48);
+                    sVideoName = (char*)VideoTrackAddr + 0x4;
+                }
+            });
+    }
+    else if (!MovieNameScanResult)
+    {
+        spdlog::error("Movie Name: Pattern scan failed.");
+    }
+
+    // Crop and zoom movies
+    uint8_t* MoviePlayerScanResult = Memory::PatternScan(baseModule, "0F ?? ?? 0F ?? ?? ?? 0F ?? ?? 73 ?? 0F ?? ?? 89 ?? ?? F3 0F ?? ?? F3 0F ?? ??");
+    if (MoviePlayerScanResult)
+    {
+        spdlog::info("Movie Player: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)MoviePlayerScanResult - (uintptr_t)baseModule);
+
+        static SafetyHookMid MoviePlayerMidHook{};
+        MoviePlayerMidHook = safetyhook::create_mid(MoviePlayerScanResult,
+            [](SafetyHookContext& ctx)
+            {
+                if (fAspectRatio > fNativeAspect)
+                {
+                    if (find(sLetterboxedCutscenes.begin(), sLetterboxedCutscenes.end(), sVideoName) != sLetterboxedCutscenes.end())
+                    {
+                        ctx.xmm2.f32[0] = fDefaultLetterboxAspectRatio / fAspectRatio;
+                        ctx.xmm0.f32[1] = -(1080.00f / 818.00f);
+                        ctx.xmm0.f32[3] = (1080.00f / 818.00f);
+                    }
+                }
+            });
+    }
+    else if (!MoviePlayerScanResult)
+    {
+        spdlog::error("Movie Player: Pattern scan failed.");
+    }
+
+}
+
 DWORD __stdcall Main(void*)
 {
     Logging();
     ReadConfig();
-    AspectFOVFix();
+    GrabResolution();
+    AspectFOV();
+    Movies();
     return true;
 }
 
