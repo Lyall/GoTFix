@@ -12,7 +12,7 @@ HMODULE thisModule;
 inipp::Ini<char> ini;
 std::shared_ptr<spdlog::logger> logger;
 string sFixName = "GoTFix";
-string sFixVer = "0.9.2";
+string sFixVer = "0.9.3";
 string sLogFile = "GoTFix.log";
 string sConfigFile = "GoTFix.ini";
 string sExeName;
@@ -21,10 +21,11 @@ filesystem::path sThisModulePath;
 std::pair DesktopDimensions = { 0,0 };
 
 // Ini Variables
+bool bSkipIntro;
+bool bRaiseFOVLimit;
 bool bDisableLetterboxing;
 bool bCompensateFOV;
 bool bRemoveAspectLimit;
-bool bSkipIntro;
 bool bMovieZoom;
 
 // Aspect ratio + HUD stuff
@@ -115,6 +116,7 @@ void ReadConfig()
 
     // Read ini file
     inipp::get_value(ini.sections["Skip Intro"], "Enabled", bSkipIntro);
+    inipp::get_value(ini.sections["Raise FOV Limit"], "Enabled", bRaiseFOVLimit);
     inipp::get_value(ini.sections["Disable Letterboxing"], "Enabled", bDisableLetterboxing);
     inipp::get_value(ini.sections["Disable Letterboxing"], "CompensateFOV", bCompensateFOV);
     inipp::get_value(ini.sections["Crop Video Letterboxing"], "Enabled", bMovieZoom);
@@ -122,6 +124,7 @@ void ReadConfig()
 
     // Log config parse
     spdlog::info("Config Parse: bSkipIntro: {}", bSkipIntro);
+    spdlog::info("Config Parse: bRaiseFOVLimit: {}", bRaiseFOVLimit);
     spdlog::info("Config Parse: bDisableLetterboxing: {}", bDisableLetterboxing);
     spdlog::info("Config Parse: bCompensateFOV: {}", bCompensateFOV);
     spdlog::info("Config Parse: bMovieZoom: {}", bMovieZoom);
@@ -241,6 +244,33 @@ void AspectFOV()
         else if (!AspectRatioLimitScanResult)
         {
             spdlog::error("Aspect Ratio Limit: Pattern scan failed.");
+        }
+    }
+
+    if (bRaiseFOVLimit)
+    {
+        // FOV limit
+        uint8_t* FOVLimitScanResult = Memory::PatternScan(baseModule, "74 ?? F3 0F ?? ?? ?? ?? ?? ?? 0F ?? ?? ?? 88 ?? ?? ?? ?? ?? 0F ?? ?? ??") + 0x2;
+        if (FOVLimitScanResult)
+        {
+            spdlog::info("FOV Limit: Address is {:s}+{:x}", sExeName.c_str(), (uintptr_t)FOVLimitScanResult - (uintptr_t)baseModule);
+            static SafetyHookMid FOVLimitMidHook{};
+            FOVLimitMidHook = safetyhook::create_mid(FOVLimitScanResult,
+                [](SafetyHookContext& ctx)
+                {
+                    float fFOVValue = ctx.xmm0.f32[0];
+
+                    // Raise upper limit to 2 instead of 1.25
+                    if (fFOVValue > 1.00f)
+                    {
+                        ctx.xmm0.f32[0] = (ctx.xmm0.f32[0] - 1.00f) * 4.00f + 1.00f;
+                    }
+
+                });
+        }
+        else if (!FOVLimitScanResult)
+        {
+            spdlog::error("FOV Limit: Pattern scan failed.");
         }
     }
 }
